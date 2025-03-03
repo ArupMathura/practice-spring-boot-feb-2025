@@ -52,4 +52,35 @@ public class StudentController {
         log.info("Last Name: {}", student.getLastName());
         return student;
     }
+
+    @PutMapping("students/{id}/update")
+    public Student updateStudent(@RequestBody Student student, @PathVariable("id") int studentId) {
+        log.info("Updating student with ID: {}", studentId);
+        log.info("First Name: {}", student.getFirstName());
+        log.info("Last Name: {}", student.getLastName());
+
+//        *************************************************************
+        /*
+        1. my req body :
+        {
+            "firstName": "arup",
+            "lastName": "das"
+        }
+        does not contain an id.
+        2. Since @RequestBody only maps the fields that exist in the request body, id remains its default value (which is 0 for an int).
+        3. You need to manually set the id from the path variable (studentId) before returning the response.
+
+         */
+
+//        *********************************************************
+        student.setId(studentId); // ✅ Set the ID from the path variable
+
+        return student;
+    }
+
+    @DeleteMapping("students/{id}/delete")
+    public String deleteStudent(@PathVariable("id") int studentId) {
+        log.warn("deleting student with id : {}", studentId);
+        return "student info deleted successfully";
+    }
 }
