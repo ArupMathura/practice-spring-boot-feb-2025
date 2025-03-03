@@ -1,12 +1,14 @@
 package com.example.revisionSpringBoot.controller;
 
 import com.example.revisionSpringBoot.bean.Student;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @RestController
 public class StudentController {
 
@@ -45,9 +47,9 @@ public class StudentController {
     @PostMapping("/students/create")
     @ResponseStatus(HttpStatus.CREATED)
     public Student createStudent(@RequestBody Student student) {
-        System.out.println(student.getId());
-        System.out.println(student.getFirstName());
-        System.out.println(student.getLastName());
+        log.info("Student ID: {}", student.getId());
+        log.info("First Name: {}", student.getFirstName());
+        log.info("Last Name: {}", student.getLastName());
         return student;
     }
 }
