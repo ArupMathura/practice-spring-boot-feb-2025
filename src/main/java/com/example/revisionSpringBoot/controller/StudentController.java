@@ -3,6 +3,7 @@ package com.example.revisionSpringBoot.controller;
 import com.example.revisionSpringBoot.bean.Student;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -12,49 +13,55 @@ import java.util.List;
 @RestController
 public class StudentController {
 
-    @GetMapping("get-student")
-    public Student getStudent() {
+    @GetMapping("students/get-student")
+    public ResponseEntity<Student> getStudent() {
         Student student = new Student(101, "Arup", "Mathura");
-        return student;
+//        return new ResponseEntity<>(student, HttpStatus.OK);
+        return ResponseEntity.ok(student);
+//        return ResponseEntity.ok()
+//                .header("custom-header", "arup-mathura")
+//                .body(student);
     }
 
-    @GetMapping("get-students")
-    public List<Student> getStudents() {
+    @GetMapping("students/get-students")
+    public ResponseEntity<List<Student>> getStudents() {
         List<Student> students = new ArrayList<>();
         students.add(new Student(102, "aaa", "aaaaa"));
         students.add(new Student(103, "bbb", "bbbbb"));
         students.add(new Student(104, "ccc", "ccccc"));
         students.add(new Student(105, "ddd", "ddddd"));
-        return students;
+        return ResponseEntity.ok(students);
     }
 
     // {id} --> URI template variable
     @GetMapping("students/{id}/{first-name}/{last-name}")
-    public Student studentPathVariable(@PathVariable("id") int studentId,
+    public ResponseEntity<Student> studentPathVariable(@PathVariable("id") int studentId,
                                        @PathVariable("first-name") String firstName,
                                        @PathVariable("last-name") String lastName) {
-        return new Student(studentId, firstName, lastName);
+        Student student = new Student(studentId, firstName, lastName);
+        return ResponseEntity.ok(student);
     }
 
     // localhost:8080/students/query?id=111&firstName=arup&lastName=mathura
     @GetMapping("/students/query")
-    public Student studentQueryParameter(@RequestParam int id,
+    public ResponseEntity<Student> studentQueryParameter(@RequestParam int id,
                                          @RequestParam String firstName,
                                          @RequestParam String lastName) {
-        return new Student(id, firstName, lastName);
+        Student student = new Student(id, firstName, lastName);
+        return ResponseEntity.ok(student);
     }
 
     @PostMapping("/students/create")
-    @ResponseStatus(HttpStatus.CREATED)
-    public Student createStudent(@RequestBody Student student) {
+//    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseEntity<Student> createStudent(@RequestBody Student student) {
         log.info("Student ID: {}", student.getId());
         log.info("First Name: {}", student.getFirstName());
         log.info("Last Name: {}", student.getLastName());
-        return student;
+        return new ResponseEntity<>(student, HttpStatus.CREATED);
     }
 
     @PutMapping("students/{id}/update")
-    public Student updateStudent(@RequestBody Student student, @PathVariable("id") int studentId) {
+    public ResponseEntity<Student> updateStudent(@RequestBody Student student, @PathVariable("id") int studentId) {
         log.info("Updating student with ID: {}", studentId);
         log.info("First Name: {}", student.getFirstName());
         log.info("Last Name: {}", student.getLastName());
@@ -75,12 +82,12 @@ public class StudentController {
 //        *********************************************************
         student.setId(studentId); // ✅ Set the ID from the path variable
 
-        return student;
+        return ResponseEntity.ok(student);
     }
 
     @DeleteMapping("students/{id}/delete")
-    public String deleteStudent(@PathVariable("id") int studentId) {
+    public ResponseEntity<String> deleteStudent(@PathVariable("id") int studentId) {
         log.warn("deleting student with id : {}", studentId);
-        return "student info deleted successfully";
+        return ResponseEntity.ok("student info deleted successfully");
     }
 }
