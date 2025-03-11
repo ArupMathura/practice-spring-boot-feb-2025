@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @AllArgsConstructor
 @Slf4j
@@ -29,5 +31,12 @@ public class UserController {
         User getUser = userService.getUserById(userId);
         log.info("user id --> {}, name --> {} {}, email --> {}", getUser.getId(), getUser.getFirstName(), getUser.getLastName(), getUser.getEmail());
         return new ResponseEntity<>(getUser, HttpStatus.OK);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<User>> getAllUsers() {
+        List<User> userList = userService.getAllUsers();
+        log.info("All Users: {}", userList);
+        return new ResponseEntity<>(userList, HttpStatus.OK);
     }
 }
