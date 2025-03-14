@@ -20,23 +20,30 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User user) {
-        log.info("received user : -----> {}", user);
+        log.info("in user controller : received user : -----> {}", user);
         User savedUser = userService.createUser(user);
-        log.info("user id = {} name = {} {} email = {}", user.getId(), user.getFirstName(), user.getLastName(), user.getEmail());
+        log.info("in user controller : user id = {} name = {} {} email = {}", user.getId(), user.getFirstName(), user.getLastName(), user.getEmail());
         return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
     }
 
     @GetMapping("{id}")
     public ResponseEntity<User> getUserById(@PathVariable("id") int userId) {
         User getUser = userService.getUserById(userId);
-        log.info("user id --> {}, name --> {} {}, email --> {}", getUser.getId(), getUser.getFirstName(), getUser.getLastName(), getUser.getEmail());
+        log.info("in user controller : user id --> {}, name --> {} {}, email --> {}", getUser.getId(), getUser.getFirstName(), getUser.getLastName(), getUser.getEmail());
         return new ResponseEntity<>(getUser, HttpStatus.OK);
     }
 
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> userList = userService.getAllUsers();
-        log.info("All Users: {}", userList);
+        log.info("in user controller : All Users: {}", userList);
         return new ResponseEntity<>(userList, HttpStatus.OK);
+    }
+
+    @PutMapping("{id}")
+    public ResponseEntity<User> updateUserById(@PathVariable("id") int userId, @RequestBody User user) {
+        User updateUser = userService.updateUserById(userId, user);
+        log.info("in user controller : user id --> {}, name --> {} {}, email --> {}", updateUser.getId(), updateUser.getFirstName(), updateUser.getLastName(), updateUser.getEmail());
+        return new ResponseEntity<>(updateUser, HttpStatus.OK);
     }
 }

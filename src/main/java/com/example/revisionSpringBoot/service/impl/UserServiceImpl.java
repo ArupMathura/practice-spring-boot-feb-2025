@@ -19,13 +19,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User createUser(User user) {
-        System.out.println("User ID before saving: " + user.getId());
+        System.out.println("in user service implementation : User ID before saving: " + user.getId());
         return userRepository.save(user);
     }
 
     @Override
     public User getUserById(int userId) {
-        log.info("received user id : -----> {}", userId);
+        log.info("in user service implementation : received user id : -----> {}", userId);
         Optional<User> optionalUser = userRepository.findById(userId);
         return optionalUser.orElseThrow(() -> new RuntimeException("User not found"));
     }
@@ -33,6 +33,18 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<User> getAllUsers() {
         return userRepository.findAll();
+    }
+
+    @Override
+    public User updateUserById(int userId, User user) {
+        User existingUser = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        log.info("in user service implementation : user id --> {}, name --> {} {}, email --> {}", existingUser.getId(), existingUser.getFirstName(), existingUser.getLastName(), existingUser.getEmail());
+        existingUser.setFirstName(user.getFirstName());
+        existingUser.setLastName(user.getLastName());
+        existingUser.setEmail(user.getEmail());
+        User updateUser = userRepository.save(existingUser);
+        log.info("in user service implementation : user id --> {}, name --> {} {}, email --> {}", updateUser.getId(), updateUser.getFirstName(), updateUser.getLastName(), updateUser.getEmail());
+        return updateUser;
     }
 
 }
