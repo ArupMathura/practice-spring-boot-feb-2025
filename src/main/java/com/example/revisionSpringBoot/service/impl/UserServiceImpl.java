@@ -47,4 +47,8 @@ public class UserServiceImpl implements UserService {
         return updateUser;
     }
 
+    public void deleteUserById(int userId) {
+        userRepository.deleteById(userId);
+    }
+
 }

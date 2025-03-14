@@ -46,4 +46,11 @@ public class UserController {
         log.info("in user controller : user id --> {}, name --> {} {}, email --> {}", updateUser.getId(), updateUser.getFirstName(), updateUser.getLastName(), updateUser.getEmail());
         return new ResponseEntity<>(updateUser, HttpStatus.OK);
     }
+
+    @DeleteMapping("{id}")
+    public ResponseEntity<String> deleteUserById(@PathVariable("id") int userId) {
+        log.info("in user controller : received user id : -----> {}", userId);
+        userService.deleteUserById(userId);
+        return new ResponseEntity<>("User deleted successfully", HttpStatus.OK);
+    }
 }
