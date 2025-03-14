@@ -6,8 +6,11 @@ import com.example.revisionSpringBoot.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -50,5 +53,27 @@ public class UserServiceImpl implements UserService {
     public void deleteUserById(int userId) {
         userRepository.deleteById(userId);
     }
+
+    @Override
+    @Transactional
+    public Map<String, Object> updateUserByEmail(String email, String firstName, String lastName) {
+        User existingUser = userRepository.findByEmail(email);
+
+        if (existingUser == null) {
+            throw new RuntimeException("User not found");
+        }
+
+        // update user's firstName and lastName
+        userRepository.updateUserByEmail(email, firstName, lastName);
+
+        // prepare the response
+        Map<String, Object> response = new HashMap<>();
+        response.put("email", email);
+        response.put("id", existingUser.getId());
+        response.put("msg", "firstname - \"" + firstName + "\" and lastname - \"" + lastName + "\" updated");
+
+        return response;
+    }
+
 
 }

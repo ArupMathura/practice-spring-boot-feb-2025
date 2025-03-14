@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @AllArgsConstructor
@@ -52,5 +53,19 @@ public class UserController {
         log.info("in user controller : received user id : -----> {}", userId);
         userService.deleteUserById(userId);
         return new ResponseEntity<>("User deleted successfully", HttpStatus.OK);
+    }
+
+    // update firstName and lastName by email
+    // http://localhost:8080/api/users/update?email=abcd@example.com
+    @PutMapping("/update")
+    public ResponseEntity<Map<String, Object>> updateUserByEmail(
+            @RequestParam String email,
+            @RequestBody Map<String, String> userDetails) {
+
+        String firstName = userDetails.get("firstName");
+        String lastName = userDetails.get("lastName");
+
+        Map<String, Object> response = userService.updateUserByEmail(email, firstName, lastName);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
