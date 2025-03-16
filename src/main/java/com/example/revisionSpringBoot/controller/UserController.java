@@ -30,7 +30,7 @@ public class UserController {
     @GetMapping("{id}")
     public ResponseEntity<User> getUserById(@PathVariable("id") int userId) {
         User getUser = userService.getUserById(userId);
-        log.info("in user controller : user id --> {}, name --> {} {}, email --> {}", getUser.getId(), getUser.getFirstName(), getUser.getLastName(), getUser.getEmail());
+        log.info("in user controller : user id --> {}, name --> {} {}, email --> {}, password -->{}", getUser.getId(), getUser.getFirstName(), getUser.getLastName(), getUser.getEmail(), getUser.getPassword());
         return new ResponseEntity<>(getUser, HttpStatus.OK);
     }
 
