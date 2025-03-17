@@ -1,6 +1,8 @@
 package com.example.revisionSpringBoot.service.impl;
 
+import com.example.revisionSpringBoot.dto.UserDto;
 import com.example.revisionSpringBoot.entity.User;
+import com.example.revisionSpringBoot.mapper.UserMapper;
 import com.example.revisionSpringBoot.repository.UserRepository;
 import com.example.revisionSpringBoot.service.UserService;
 import lombok.AllArgsConstructor;
@@ -12,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -21,25 +24,34 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
 
     @Override
-    public User createUser(User user) {
-        System.out.println("in user service implementation : User ID before saving: " + user.getId());
-        return userRepository.save(user);
+    public UserDto createUser(UserDto userDto) {
+        System.out.println("in user service implementation : User ID before saving: " + userDto.getId());
+        User user = UserMapper.mapToUserEntity(userDto);
+
+        User saveUser = userRepository.save(user);
+
+        UserDto saveUserDto = UserMapper.mapToUserDto(saveUser);
+        return saveUserDto;
     }
 
     @Override
-    public User getUserById(int userId) {
+    public UserDto getUserById(int userId) {
         log.info("in user service implementation : received user id : -----> {}", userId);
         Optional<User> optionalUser = userRepository.findById(userId);
-        return optionalUser.orElseThrow(() -> new RuntimeException("User not found"));
+        User user = optionalUser.orElseThrow(() -> new RuntimeException("User not found"));
+        return UserMapper.mapToUserDto(user);
     }
 
     @Override
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserDto> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        return users.stream()
+                .map(UserMapper::mapToUserDto)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public User updateUserById(int userId, User user) {
+    public UserDto updateUserById(int userId, UserDto user) {
         User existingUser = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         log.info("in user service implementation : user id --> {}, name --> {} {}, email --> {}", existingUser.getId(), existingUser.getFirstName(), existingUser.getLastName(), existingUser.getEmail());
         existingUser.setFirstName(user.getFirstName());
@@ -47,7 +59,7 @@ public class UserServiceImpl implements UserService {
         existingUser.setEmail(user.getEmail());
         User updateUser = userRepository.save(existingUser);
         log.info("in user service implementation : user id --> {}, name --> {} {}, email --> {}", updateUser.getId(), updateUser.getFirstName(), updateUser.getLastName(), updateUser.getEmail());
-        return updateUser;
+        return UserMapper.mapToUserDto(updateUser);
     }
 
     public void deleteUserById(int userId) {

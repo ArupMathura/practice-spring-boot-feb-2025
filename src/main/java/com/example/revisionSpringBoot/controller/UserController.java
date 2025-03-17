@@ -1,5 +1,6 @@
 package com.example.revisionSpringBoot.controller;
 
+import com.example.revisionSpringBoot.dto.UserDto;
 import com.example.revisionSpringBoot.entity.User;
 import com.example.revisionSpringBoot.service.UserService;
 import lombok.AllArgsConstructor;
@@ -20,30 +21,30 @@ public class UserController {
     private UserService userService;
 
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
+    public ResponseEntity<UserDto> createUser(@RequestBody UserDto user) {
         log.info("in user controller : received user : -----> {}", user);
-        User savedUser = userService.createUser(user);
+        UserDto savedUser = userService.createUser(user);
         log.info("in user controller : user id = {} name = {} {} email = {}", user.getId(), user.getFirstName(), user.getLastName(), user.getEmail());
         return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<User> getUserById(@PathVariable("id") int userId) {
-        User getUser = userService.getUserById(userId);
+    public ResponseEntity<UserDto> getUserById(@PathVariable("id") int userId) {
+        UserDto getUser = userService.getUserById(userId);
         log.info("in user controller : user id --> {}, name --> {} {}, email --> {}, password -->{}", getUser.getId(), getUser.getFirstName(), getUser.getLastName(), getUser.getEmail(), getUser.getPassword());
         return new ResponseEntity<>(getUser, HttpStatus.OK);
     }
 
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
-        List<User> userList = userService.getAllUsers();
+    public ResponseEntity<List<UserDto>> getAllUsers() {
+        List<UserDto> userList = userService.getAllUsers();
         log.info("in user controller : All Users: {}", userList);
         return new ResponseEntity<>(userList, HttpStatus.OK);
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<User> updateUserById(@PathVariable("id") int userId, @RequestBody User user) {
-        User updateUser = userService.updateUserById(userId, user);
+    public ResponseEntity<UserDto> updateUserById(@PathVariable("id") int userId, @RequestBody UserDto userDto) {
+        UserDto updateUser = userService.updateUserById(userId, userDto);
         log.info("in user controller : user id --> {}, name --> {} {}, email --> {}", updateUser.getId(), updateUser.getFirstName(), updateUser.getLastName(), updateUser.getEmail());
         return new ResponseEntity<>(updateUser, HttpStatus.OK);
     }
