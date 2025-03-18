@@ -2,13 +2,17 @@ package com.example.revisionSpringBoot.controller;
 
 import com.example.revisionSpringBoot.dto.UserDto;
 import com.example.revisionSpringBoot.entity.User;
+import com.example.revisionSpringBoot.exception.ErrorDetails;
+import com.example.revisionSpringBoot.exception.ResourceNotFoundException;
 import com.example.revisionSpringBoot.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.WebRequest;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -68,5 +72,19 @@ public class UserController {
 
         Map<String, Object> response = userService.updateUserByEmail(email, firstName, lastName);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // We use this @ExceptionHandler annotation to handle the specific exception and return the custom error response back to the client.
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorDetails> handleResourceNotFoundException(ResourceNotFoundException exception, WebRequest webRequest) {
+        ErrorDetails errorDetails = new ErrorDetails(
+                LocalDateTime.now(),
+                exception.getMessage(),
+                webRequest.getDescription(false),
+//                exception.getLocalizedMessage(),
+                HttpStatus.NOT_FOUND.value(),
+                "USER_NOT_FOUND"
+        );
+        return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
     }
 }
