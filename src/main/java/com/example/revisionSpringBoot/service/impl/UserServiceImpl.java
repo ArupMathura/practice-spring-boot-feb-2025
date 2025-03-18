@@ -2,6 +2,7 @@ package com.example.revisionSpringBoot.service.impl;
 
 import com.example.revisionSpringBoot.dto.UserDto;
 import com.example.revisionSpringBoot.entity.User;
+import com.example.revisionSpringBoot.mapper.AutoUserMapper;
 import com.example.revisionSpringBoot.mapper.UserMapper;
 import com.example.revisionSpringBoot.repository.UserRepository;
 import com.example.revisionSpringBoot.service.UserService;
@@ -23,14 +24,18 @@ public class UserServiceImpl implements UserService {
 
     private UserRepository userRepository;
 
+    private AutoUserMapper autoUserMapper;
+
     @Override
     public UserDto createUser(UserDto userDto) {
         System.out.println("in user service implementation : User ID before saving: " + userDto.getId());
-        User user = UserMapper.mapToUserEntity(userDto);
+//        User user = UserMapper.mapToUserEntity(userDto);
+        User user = autoUserMapper.mapToUserEntity(userDto);
 
         User saveUser = userRepository.save(user);
 
-        UserDto saveUserDto = UserMapper.mapToUserDto(saveUser);
+//        UserDto saveUserDto = UserMapper.mapToUserDto(saveUser);
+        UserDto saveUserDto = autoUserMapper.mapToUserDto(saveUser);
         return saveUserDto;
     }
 
@@ -39,14 +44,19 @@ public class UserServiceImpl implements UserService {
         log.info("in user service implementation : received user id : -----> {}", userId);
         Optional<User> optionalUser = userRepository.findById(userId);
         User user = optionalUser.orElseThrow(() -> new RuntimeException("User not found"));
-        return UserMapper.mapToUserDto(user);
+//        return UserMapper.mapToUserDto(user);
+        return autoUserMapper.mapToUserDto(user);
     }
 
     @Override
     public List<UserDto> getAllUsers() {
         List<User> users = userRepository.findAll();
+//        return users.stream()
+//                .map(UserMapper::mapToUserDto)
+//                .collect(Collectors.toList());
+
         return users.stream()
-                .map(UserMapper::mapToUserDto)
+                .map(autoUserMapper::mapToUserDto)
                 .collect(Collectors.toList());
     }
 
@@ -59,7 +69,8 @@ public class UserServiceImpl implements UserService {
         existingUser.setEmail(user.getEmail());
         User updateUser = userRepository.save(existingUser);
         log.info("in user service implementation : user id --> {}, name --> {} {}, email --> {}", updateUser.getId(), updateUser.getFirstName(), updateUser.getLastName(), updateUser.getEmail());
-        return UserMapper.mapToUserDto(updateUser);
+//        return UserMapper.mapToUserDto(updateUser);
+        return autoUserMapper.mapToUserDto(updateUser);
     }
 
     public void deleteUserById(int userId) {
