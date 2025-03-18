@@ -2,6 +2,7 @@ package com.example.revisionSpringBoot.service.impl;
 
 import com.example.revisionSpringBoot.dto.UserDto;
 import com.example.revisionSpringBoot.entity.User;
+import com.example.revisionSpringBoot.exception.ResourceNotFoundException;
 import com.example.revisionSpringBoot.mapper.AutoUserMapper;
 import com.example.revisionSpringBoot.mapper.UserMapper;
 import com.example.revisionSpringBoot.repository.UserRepository;
@@ -42,8 +43,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto getUserById(int userId) {
         log.info("in user service implementation : received user id : -----> {}", userId);
-        Optional<User> optionalUser = userRepository.findById(userId);
-        User user = optionalUser.orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("user", "id", (long) userId));
+//        User user = optionalUser.orElseThrow(() -> new RuntimeException("User not found"));
 //        return UserMapper.mapToUserDto(user);
         return autoUserMapper.mapToUserDto(user);
     }
@@ -62,7 +63,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto updateUserById(int userId, UserDto user) {
-        User existingUser = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        User existingUser = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("user", "id", (long) userId));
         log.info("in user service implementation : user id --> {}, name --> {} {}, email --> {}", existingUser.getId(), existingUser.getFirstName(), existingUser.getLastName(), existingUser.getEmail());
         existingUser.setFirstName(user.getFirstName());
         existingUser.setLastName(user.getLastName());
