@@ -84,7 +84,7 @@ public class UserServiceImpl implements UserService {
         User existingUser = userRepository.findByEmail(email);
 
         if (existingUser == null) {
-            throw new RuntimeException("User not found");
+            throw new ResourceNotFoundException("User", "email", email);
         }
 
         // update user's firstName and lastName

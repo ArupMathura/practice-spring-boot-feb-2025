@@ -1,0 +1,97 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > AutoUserMapper</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.example.revisionSpringBoot.mapper</a>
+</div>
+
+<h1>Coverage Summary for Class: AutoUserMapper (com.example.revisionSpringBoot.mapper)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+</tr>
+<tr>
+  <td class="name">AutoUserMapper</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.example.revisionSpringBoot.mapper;
+&nbsp;
+&nbsp;import com.example.revisionSpringBoot.dto.UserDto;
+&nbsp;import com.example.revisionSpringBoot.entity.User;
+&nbsp;import org.mapstruct.Mapper;
+&nbsp;import org.mapstruct.Mapping;
+&nbsp;import org.mapstruct.Mappings;
+&nbsp;
+&nbsp;@Mapper(componentModel = &quot;spring&quot;) // Enables Spring to inject this mapper
+&nbsp;public interface AutoUserMapper {
+&nbsp;
+&nbsp;    @Mappings({
+&nbsp;            @Mapping(source = &quot;id&quot;, target = &quot;id&quot;),
+&nbsp;            @Mapping(source = &quot;firstName&quot;, target = &quot;firstName&quot;),
+&nbsp;            @Mapping(source = &quot;lastName&quot;, target = &quot;lastName&quot;),
+&nbsp;            @Mapping(source = &quot;email&quot;, target = &quot;email&quot;),
+&nbsp;            @Mapping(source = &quot;password&quot;, target = &quot;password&quot;)
+&nbsp;    })
+&nbsp;    UserDto mapToUserDto(User user);
+&nbsp;
+&nbsp;    @Mappings({
+&nbsp;            @Mapping(source = &quot;id&quot;, target = &quot;id&quot;),
+&nbsp;            @Mapping(source = &quot;firstName&quot;, target = &quot;firstName&quot;),
+&nbsp;            @Mapping(source = &quot;lastName&quot;, target = &quot;lastName&quot;),
+&nbsp;            @Mapping(source = &quot;email&quot;, target = &quot;email&quot;),
+&nbsp;            @Mapping(source = &quot;password&quot;, target = &quot;password&quot;)
+&nbsp;    })
+&nbsp;    User mapToUserEntity(UserDto userDto);
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-04-28 01:01</div>
+</div>
+</body>
+</html>
