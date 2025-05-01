@@ -157,7 +157,6 @@ class UserControllerTest {
         verify(userService, times(1)).deleteUserById(id);
     }
 
-
     @Test
     void testUpdateUserByEmail() throws Exception {
         String email = "test@example.com";
