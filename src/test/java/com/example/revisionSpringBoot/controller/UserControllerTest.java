@@ -163,10 +163,15 @@ class UserControllerTest {
         String firstName = "John";
         String lastName = "Doe";
 
+        // Create request body - userDetails
+        Map<String, String> requestBody = new HashMap<>();
+        requestBody.put("firstName", firstName);
+        requestBody.put("lastName", lastName);
+
         // Create request body
-        Map<String, String> userDetails = new HashMap<>();
-        userDetails.put("firstName", firstName);
-        userDetails.put("lastName", lastName);
+//        Map<String, String> userDetails = new HashMap<>();
+//        userDetails.put("firstName", firstName);
+//        userDetails.put("lastName", lastName);
 
         // Create expected response from service
         Map<String, Object> response = new HashMap<>();
@@ -174,13 +179,15 @@ class UserControllerTest {
         response.put("id", 1);  // suppose id = 1
         response.put("msg", "firstname - \"" + firstName + "\" and lastname - \"" + lastName + "\" updated");
 
+        String requestJson = new ObjectMapper().writeValueAsString(requestBody);
+
         // Mock the service call
         when(userService.updateUserByEmail(eq(email), eq(firstName), eq(lastName))).thenReturn(response);
 
         mockMvc.perform(put("/api/users/update") // URL
                         .param("email", email) // email is passed as RequestParam
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(userDetails))) // userDetails as body
+                        .content(requestJson)) // userDetails as body
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value(email))
                 .andExpect(jsonPath("$.id").value(1))
