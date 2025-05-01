@@ -157,6 +157,7 @@ class UserControllerTest {
         verify(userService, times(1)).deleteUserById(id);
     }
 
+
     @Test
     void testUpdateUserByEmail() throws Exception {
         String email = "test@example.com";
@@ -193,5 +194,4 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.msg").value("firstname - \"" + firstName + "\" and lastname - \"" + lastName + "\" updated"));
     }
-
 }
