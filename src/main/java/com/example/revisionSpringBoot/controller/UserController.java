@@ -5,6 +5,7 @@ import com.example.revisionSpringBoot.entity.User;
 import com.example.revisionSpringBoot.exception.ErrorDetails;
 import com.example.revisionSpringBoot.exception.ResourceNotFoundException;
 import com.example.revisionSpringBoot.service.UserService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -25,7 +26,7 @@ public class UserController {
     private UserService userService;
 
     @PostMapping
-    public ResponseEntity<UserDto> createUser(@RequestBody UserDto user) {
+    public ResponseEntity<UserDto> createUser(@RequestBody @Valid UserDto user) {
         log.info("in user controller : received user : -----> {}", user);
         UserDto savedUser = userService.createUser(user);
         log.info("in user controller : user id = {} name = {} {} email = {}", user.getId(), user.getFirstName(), user.getLastName(), user.getEmail());
