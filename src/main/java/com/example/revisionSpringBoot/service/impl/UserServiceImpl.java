@@ -5,6 +5,7 @@ import com.example.revisionSpringBoot.dto.UserRequest;
 import com.example.revisionSpringBoot.dto.UserResponse;
 import com.example.revisionSpringBoot.entity.User;
 import com.example.revisionSpringBoot.exception.ResourceNotFoundException;
+import com.example.revisionSpringBoot.exception.UserNotFoundException;
 import com.example.revisionSpringBoot.mapper.AutoUserMapper;
 
 import com.example.revisionSpringBoot.repository.UserRepository;
@@ -45,18 +46,16 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse getUserById(int userId) {
         log.info("in user service implementation : received user id : -----> {}", userId);
-        User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("user", "id", (long) userId));
-//        User user = optionalUser.orElseThrow(() -> new RuntimeException("User not found"));
-//        return UserMapper.mapToUserDto(user);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found with id: " + userId)
+                );
         return autoUserMapper.mapToUserResponse(user);
     }
 
     @Override
     public List<UserResponse> getAllUsers() {
         List<User> users = userRepository.findAll();
-//        return users.stream()
-//                .map(UserMapper::mapToUserDto)
-//                .collect(Collectors.toList());
 
         return users.stream()
                 .map(autoUserMapper::mapToUserResponse)
@@ -65,19 +64,23 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse updateUserById(int userId, UserRequest user) {
-        User existingUser = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("user", "id", (long) userId));
+        User existingUser = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
         log.info("in user service implementation : user id --> {}, name --> {} {}, email --> {}", existingUser.getId(), existingUser.getFirstName(), existingUser.getLastName(), existingUser.getEmail());
         existingUser.setFirstName(user.getFirstName());
         existingUser.setLastName(user.getLastName());
         existingUser.setEmail(user.getEmail());
         User updateUser = userRepository.save(existingUser);
         log.info("in user service implementation : user id --> {}, name --> {} {}, email --> {}", updateUser.getId(), updateUser.getFirstName(), updateUser.getLastName(), updateUser.getEmail());
-//        return UserMapper.mapToUserDto(updateUser);
         return autoUserMapper.mapToUserResponse(updateUser);
     }
 
     public void deleteUserById(int userId) {
-        userRepository.deleteById(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found with id: " + userId)
+                );
+
+        userRepository.delete(user);
     }
 
     @Override

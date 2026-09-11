@@ -56,7 +56,7 @@ public class UserController {
 
     @DeleteMapping("{id}")
     public ResponseEntity<String> deleteUserById(@PathVariable("id") int userId) {
-        log.info("in user controller : received user id : -----> {}", userId);
+        log.info("In user controller: received user id: {}", userId);
         userService.deleteUserById(userId);
         return new ResponseEntity<>("User deleted successfully", HttpStatus.OK);
     }
@@ -76,7 +76,7 @@ public class UserController {
     }
 
     // We use this @ExceptionHandler annotation to handle the specific exception and return the custom error response back to the client.
-    @ExceptionHandler(ResourceNotFoundException.class)
+    /*@ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorDetails> handleResourceNotFoundException(ResourceNotFoundException exception, WebRequest webRequest) {
         ErrorDetails errorDetails = new ErrorDetails(
                 LocalDateTime.now(),
@@ -87,5 +87,5 @@ public class UserController {
                 "USER_NOT_FOUND"
         );
         return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
-    }
+    }*/
 }
