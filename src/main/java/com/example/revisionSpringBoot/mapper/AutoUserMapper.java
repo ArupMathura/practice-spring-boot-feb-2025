@@ -1,6 +1,8 @@
 package com.example.revisionSpringBoot.mapper;
 
 import com.example.revisionSpringBoot.dto.UserDto;
+import com.example.revisionSpringBoot.dto.UserRequest;
+import com.example.revisionSpringBoot.dto.UserResponse;
 import com.example.revisionSpringBoot.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -26,4 +28,20 @@ public interface AutoUserMapper {
             @Mapping(source = "password", target = "password")
     })
     User mapToUserEntity(UserDto userDto);
+
+    @Mappings({
+            @Mapping(source = "firstName", target = "firstName"),
+            @Mapping(source = "lastName", target = "lastName"),
+            @Mapping(source = "email", target = "email"),
+            @Mapping(source = "password", target = "password")
+    })
+    User mapToUserEntity(UserRequest userRequest);
+
+    @Mappings({
+            @Mapping(source = "id", target = "id"),
+            @Mapping(source = "firstName", target = "firstName"),
+            @Mapping(source = "lastName", target = "lastName"),
+            @Mapping(source = "email", target = "email")
+    })
+    UserResponse mapToUserResponse(User user);
 }

@@ -1,19 +1,21 @@
 package com.example.revisionSpringBoot.service;
 
 import com.example.revisionSpringBoot.dto.UserDto;
+import com.example.revisionSpringBoot.dto.UserRequest;
+import com.example.revisionSpringBoot.dto.UserResponse;
 import com.example.revisionSpringBoot.entity.User;
 
 import java.util.List;
 import java.util.Map;
 
 public interface UserService {
-    UserDto createUser (UserDto userDto);
+    UserResponse createUser (UserRequest userRequest);
 
-    UserDto getUserById(int userId);
+    UserResponse getUserById(int userId);
 
-    List<UserDto> getAllUsers();
+    List<UserResponse> getAllUsers();
 
-    UserDto updateUserById(int userId, UserDto userDto);
+    UserResponse updateUserById(int userId, UserRequest userDto);
 
     void deleteUserById(int userId);
 

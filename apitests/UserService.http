@@ -1,0 +1,44 @@
+### Create User
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Smith",
+  "email": "john6@gmail.com",
+  "password": "abcd1234"
+}
+
+
+### Get All Users
+GET http://localhost:8080/api/users
+
+
+### Get User By ID
+GET http://localhost:8080/api/users/2
+
+
+### Update User
+PUT http://localhost:8080/api/users/4
+Content-Type: application/json
+
+{
+  "firstName": "Johnnnnn",
+  "lastName": "Smithhhhhhhhhh",
+  "email": "john22@gmail.com",
+  "password": "abcd1234"
+}
+
+
+### Update User By Email
+PUT http://localhost:8080/api/users/update?email=john22%40gmail.com
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Smith"
+}
+
+
+### Delete User By ID
+DELETE http://localhost:8080/api/users/4

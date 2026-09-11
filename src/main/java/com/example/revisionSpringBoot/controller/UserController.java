@@ -1,7 +1,7 @@
 package com.example.revisionSpringBoot.controller;
 
-import com.example.revisionSpringBoot.dto.UserDto;
-import com.example.revisionSpringBoot.entity.User;
+import com.example.revisionSpringBoot.dto.UserRequest;
+import com.example.revisionSpringBoot.dto.UserResponse;
 import com.example.revisionSpringBoot.exception.ErrorDetails;
 import com.example.revisionSpringBoot.exception.ResourceNotFoundException;
 import com.example.revisionSpringBoot.service.UserService;
@@ -26,30 +26,30 @@ public class UserController {
     private UserService userService;
 
     @PostMapping
-    public ResponseEntity<UserDto> createUser(@RequestBody @Valid UserDto user) {
-        log.info("in user controller : received user : -----> {}", user);
-        UserDto savedUser = userService.createUser(user);
-        log.info("in user controller : user id = {} name = {} {} email = {}", user.getId(), user.getFirstName(), user.getLastName(), user.getEmail());
+    public ResponseEntity<UserResponse> createUser(@RequestBody @Valid UserRequest userRequest) {
+        log.info("in user controller : received user : -----> {}", userRequest);
+        UserResponse savedUser = userService.createUser(userRequest);
+        log.info("in user controller : user id = {} name = {} {} email = {}", savedUser.getId(), savedUser.getFirstName(), savedUser.getLastName(), savedUser.getEmail());
         return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<UserDto> getUserById(@PathVariable("id") int userId) {
-        UserDto getUser = userService.getUserById(userId);
-        log.info("in user controller : user id --> {}, name --> {} {}, email --> {}, password -->{}", getUser.getId(), getUser.getFirstName(), getUser.getLastName(), getUser.getEmail(), getUser.getPassword());
+    public ResponseEntity<UserResponse> getUserById(@PathVariable("id") int userId) {
+        UserResponse getUser = userService.getUserById(userId);
+        log.info("in user controller : user id --> {}, name --> {} {}, email --> {}", getUser.getId(), getUser.getFirstName(), getUser.getLastName(), getUser.getEmail());
         return new ResponseEntity<>(getUser, HttpStatus.OK);
     }
 
     @GetMapping
-    public ResponseEntity<List<UserDto>> getAllUsers() {
-        List<UserDto> userList = userService.getAllUsers();
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+        List<UserResponse> userList = userService.getAllUsers();
         log.info("in user controller : All Users: {}", userList);
         return new ResponseEntity<>(userList, HttpStatus.OK);
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<UserDto> updateUserById(@PathVariable("id") int userId, @RequestBody UserDto userDto) {
-        UserDto updateUser = userService.updateUserById(userId, userDto);
+    public ResponseEntity<UserResponse> updateUserById(@PathVariable("id") int userId, @RequestBody UserRequest userRequest) {
+        UserResponse updateUser = userService.updateUserById(userId, userRequest);
         log.info("in user controller : user id --> {}, name --> {} {}, email --> {}", updateUser.getId(), updateUser.getFirstName(), updateUser.getLastName(), updateUser.getEmail());
         return new ResponseEntity<>(updateUser, HttpStatus.OK);
     }

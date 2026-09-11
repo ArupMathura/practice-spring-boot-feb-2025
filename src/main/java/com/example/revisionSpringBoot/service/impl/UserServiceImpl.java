@@ -1,6 +1,8 @@
 package com.example.revisionSpringBoot.service.impl;
 
 import com.example.revisionSpringBoot.dto.UserDto;
+import com.example.revisionSpringBoot.dto.UserRequest;
+import com.example.revisionSpringBoot.dto.UserResponse;
 import com.example.revisionSpringBoot.entity.User;
 import com.example.revisionSpringBoot.exception.ResourceNotFoundException;
 import com.example.revisionSpringBoot.mapper.AutoUserMapper;
@@ -28,41 +30,41 @@ public class UserServiceImpl implements UserService {
     private AutoUserMapper autoUserMapper;
 
     @Override
-    public UserDto createUser(UserDto userDto) {
-        System.out.println("in user service implementation : User ID before saving: " + userDto.getId());
+    public UserResponse createUser(UserRequest userRequest) {
+//        System.out.println("in user service implementation : User ID before saving: " + userRequest.getId());
 //        User user = UserMapper.mapToUserEntity(userDto);
-        User user = autoUserMapper.mapToUserEntity(userDto);
+        User user = autoUserMapper.mapToUserEntity(userRequest);
 
         User saveUser = userRepository.save(user);
 
 //        UserDto saveUserDto = UserMapper.mapToUserDto(saveUser);
-        UserDto saveUserDto = autoUserMapper.mapToUserDto(saveUser);
-        return saveUserDto;
+        UserResponse saveUserResponse = autoUserMapper.mapToUserResponse(saveUser);
+        return saveUserResponse;
     }
 
     @Override
-    public UserDto getUserById(int userId) {
+    public UserResponse getUserById(int userId) {
         log.info("in user service implementation : received user id : -----> {}", userId);
         User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("user", "id", (long) userId));
 //        User user = optionalUser.orElseThrow(() -> new RuntimeException("User not found"));
 //        return UserMapper.mapToUserDto(user);
-        return autoUserMapper.mapToUserDto(user);
+        return autoUserMapper.mapToUserResponse(user);
     }
 
     @Override
-    public List<UserDto> getAllUsers() {
+    public List<UserResponse> getAllUsers() {
         List<User> users = userRepository.findAll();
 //        return users.stream()
 //                .map(UserMapper::mapToUserDto)
 //                .collect(Collectors.toList());
 
         return users.stream()
-                .map(autoUserMapper::mapToUserDto)
+                .map(autoUserMapper::mapToUserResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public UserDto updateUserById(int userId, UserDto user) {
+    public UserResponse updateUserById(int userId, UserRequest user) {
         User existingUser = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("user", "id", (long) userId));
         log.info("in user service implementation : user id --> {}, name --> {} {}, email --> {}", existingUser.getId(), existingUser.getFirstName(), existingUser.getLastName(), existingUser.getEmail());
         existingUser.setFirstName(user.getFirstName());
@@ -71,7 +73,7 @@ public class UserServiceImpl implements UserService {
         User updateUser = userRepository.save(existingUser);
         log.info("in user service implementation : user id --> {}, name --> {} {}, email --> {}", updateUser.getId(), updateUser.getFirstName(), updateUser.getLastName(), updateUser.getEmail());
 //        return UserMapper.mapToUserDto(updateUser);
-        return autoUserMapper.mapToUserDto(updateUser);
+        return autoUserMapper.mapToUserResponse(updateUser);
     }
 
     public void deleteUserById(int userId) {

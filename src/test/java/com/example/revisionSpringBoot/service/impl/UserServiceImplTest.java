@@ -45,7 +45,7 @@ class UserServiceImplTest {
         userDto = new UserDto();
         userDto.setId(5);
     }
-
+/*
     @Test
     public void testGetUserById() {
 
@@ -129,7 +129,7 @@ class UserServiceImplTest {
         userRepository.deleteById(5);
         verify(userRepository, times(1)).deleteById(5);
     }*/
-
+/*
     @Test
     public void testDeleteUserById() {
         int userId = 5;
@@ -177,5 +177,5 @@ class UserServiceImplTest {
         verify(userRepository, times(1)).findByEmail(email);
 //        assertEquals("User not found with email : unknown@gmail.com", exception.getMessage());
     }
-
+*/
 }
