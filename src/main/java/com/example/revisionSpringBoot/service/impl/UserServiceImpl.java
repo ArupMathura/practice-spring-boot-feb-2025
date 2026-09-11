@@ -1,12 +1,12 @@
 package com.example.revisionSpringBoot.service.impl;
 
-import com.example.revisionSpringBoot.dto.UserDto;
+
 import com.example.revisionSpringBoot.dto.UserRequest;
 import com.example.revisionSpringBoot.dto.UserResponse;
 import com.example.revisionSpringBoot.entity.User;
 import com.example.revisionSpringBoot.exception.ResourceNotFoundException;
 import com.example.revisionSpringBoot.mapper.AutoUserMapper;
-import com.example.revisionSpringBoot.mapper.UserMapper;
+
 import com.example.revisionSpringBoot.repository.UserRepository;
 import com.example.revisionSpringBoot.service.UserService;
 import lombok.AllArgsConstructor;

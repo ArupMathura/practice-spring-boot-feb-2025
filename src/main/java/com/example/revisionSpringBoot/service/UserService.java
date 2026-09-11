@@ -1,6 +1,6 @@
 package com.example.revisionSpringBoot.service;
 
-import com.example.revisionSpringBoot.dto.UserDto;
+
 import com.example.revisionSpringBoot.dto.UserRequest;
 import com.example.revisionSpringBoot.dto.UserResponse;
 import com.example.revisionSpringBoot.entity.User;

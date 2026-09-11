@@ -1,6 +1,6 @@
 package com.example.revisionSpringBoot.service.impl;
 
-import com.example.revisionSpringBoot.dto.UserDto;
+
 import com.example.revisionSpringBoot.entity.User;
 import com.example.revisionSpringBoot.exception.ResourceNotFoundException;
 import com.example.revisionSpringBoot.mapper.AutoUserMapper;
@@ -25,7 +25,7 @@ import static org.mockito.Mockito.*;
 @Slf4j
 class UserServiceImplTest {
 
-    @Mock
+    /*@Mock
     private UserRepository userRepository;
 
     @Mock
@@ -44,7 +44,7 @@ class UserServiceImplTest {
 
         userDto = new UserDto();
         userDto.setId(5);
-    }
+    }*/
 /*
     @Test
     public void testGetUserById() {

@@ -1,6 +1,6 @@
 package com.example.revisionSpringBoot.mapper;
 
-import com.example.revisionSpringBoot.dto.UserDto;
+
 import com.example.revisionSpringBoot.dto.UserRequest;
 import com.example.revisionSpringBoot.entity.User;
 import org.junit.jupiter.api.Test;
