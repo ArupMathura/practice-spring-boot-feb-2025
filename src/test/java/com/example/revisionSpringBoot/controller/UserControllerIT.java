@@ -2,7 +2,6 @@ package com.example.revisionSpringBoot.controller;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -10,7 +9,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
+
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 
 
@@ -36,6 +35,48 @@ class UserControllerIT {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Test
+    void shouldGetUserWithMultipleAddresses() throws Exception {
+
+        // Arrange
+
+        String expectedJson = """
+                {
+                  "id": 12,
+                  "firstName": "Arup",
+                  "lastName": "Mathura",
+                  "email": "arup@gmail.com",
+                  "addresses": [
+                    {
+                      "id": 101,
+                      "userId": 12,
+                      "addressLine1": "12 Park Street",
+                      "city": "Kolkata",
+                      "state": "West Bengal",
+                      "zipCode": "700016"
+                    },
+                    {
+                      "id": 102,
+                      "userId": 12,
+                      "addressLine1": "45 Salt Lake",
+                      "city": "Kolkata",
+                      "state": "West Bengal",
+                      "zipCode": "700091"
+                    }
+                  ]
+                }
+                """;
+
+        // Act + Assert
+
+        mockMvc.perform(
+                        get("/api/users/{id}", 12)
+                )
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().json(expectedJson));
+    }
 
     @Test
     void shouldCreateUser() throws Exception {

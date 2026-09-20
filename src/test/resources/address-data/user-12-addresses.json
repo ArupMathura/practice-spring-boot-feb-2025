@@ -1,0 +1,18 @@
+[
+  {
+    "id": 101,
+    "userId": 12,
+    "addressLine1": "12 Park Street",
+    "city": "Kolkata",
+    "state": "West Bengal",
+    "zipCode": "700016"
+  },
+  {
+    "id": 102,
+    "userId": 12,
+    "addressLine1": "45 Salt Lake",
+    "city": "Kolkata",
+    "state": "West Bengal",
+    "zipCode": "700091"
+  }
+]

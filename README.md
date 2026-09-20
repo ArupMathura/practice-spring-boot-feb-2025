@@ -53,6 +53,16 @@ SQL Developer is mainly designed for Oracle databases, but you can connect to Po
 
 ---
 
+## ✅ How to Connect beeceptor
+
+### Create address microservices :
+
+- url : https://app.beeceptor.com/console/address1432
+- here only user 12 can have multiple addresses
+- keep user 12 
+
+---
+
 ### 💡 Need Help?
 If you run into any issues, feel free to open an issue or contribute by submitting a pull request!
 

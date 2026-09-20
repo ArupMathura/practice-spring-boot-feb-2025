@@ -1,6 +1,9 @@
 package com.example.revisionSpringBoot.service.impl;
 
 
+import com.example.revisionSpringBoot.client.AddressClient;
+import com.example.revisionSpringBoot.client.AddressClientImpl;
+import com.example.revisionSpringBoot.dto.AddressResponse;
 import com.example.revisionSpringBoot.dto.UserRequest;
 import com.example.revisionSpringBoot.dto.UserResponse;
 import com.example.revisionSpringBoot.entity.User;
@@ -18,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,6 +31,8 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
 
     private AutoUserMapper autoUserMapper;
+
+    private final AddressClient addressClient;
 
     @Override
     public UserResponse createUser(UserRequest userRequest) {
@@ -46,11 +50,26 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse getUserById(int userId) {
         log.info("in user service implementation : received user id : -----> {}", userId);
+        // 1. Get user from local database
         User user = userRepository.findById(userId)
                 .orElseThrow(() ->
                         new UserNotFoundException("User not found with id: " + userId)
                 );
-        return autoUserMapper.mapToUserResponse(user);
+//        return autoUserMapper.mapToUserResponse(user);
+
+        // 2. Map User -> UserResponse
+        UserResponse userResponse =
+                autoUserMapper.mapToUserResponse(user);
+
+        // 3. Get addresses from Beeceptor
+        List<AddressResponse> addresses =
+                addressClient.getAddressesByUserId((long) userId);
+
+        // 4. Add addresses to UserResponse
+        userResponse.setAddresses(addresses);
+
+
+        return userResponse;
     }
 
     @Override

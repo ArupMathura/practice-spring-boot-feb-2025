@@ -14,8 +14,8 @@ Content-Type: application/json
 GET http://localhost:8080/api/users
 
 
-### Get User By ID
-GET http://localhost:8080/api/users/2
+### Get User By ID - to fetch the address - onlly user 12 has the address
+GET http://localhost:8080/api/users/12
 
 
 ### Update User
