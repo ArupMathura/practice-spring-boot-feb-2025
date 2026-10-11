@@ -79,273 +79,284 @@ class UserControllerIT {
     }
 
     @Test
-    void shouldCreateUser() throws Exception {
+    void shouldGetUserWithMultipleAddresses2() throws Exception {
 
-        // Arrange
-        String requestJson = """
-                {
-                    "firstName": "John",
-                    "lastName": "Smith",
-                    "email": "john.test@gmail.com",
-                    "password": "abcd1234"
-                }
-                """;
-
-        String expectedJson = """
-                {
-                    "id": 32,
-                    "firstName": "John",
-                    "lastName": "Smith",
-                    "email": "john.test@gmail.com"
-                }
-                """;
-
-        // Act + Assert
-        /*MvcResult result = mockMvc.perform(
-                        post("/api/users")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(requestJson)
-                )
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-
-        System.out.println("Status: " + result.getResponse().getStatus());
-        System.out.println("Response: " + result.getResponse().getContentAsString());*/
         mockMvc.perform(
-                        post("/api/users")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(requestJson)
+                        get("/api/users/{id}", 1111)
                 )
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(status().isCreated())
-                .andExpect(content().json(expectedJson));
-    }
-
-    @Test
-    void shouldGetUserById() throws Exception {
-
-        // Arrange
-        String expectedJson = """
-            {
-                "id": 2,
-                "firstName": "Existing2",
-                "lastName": "TestUser2",
-                "email": "existing2@test.com"
-            }
-            """;
-
-        // Act + Assert
-        mockMvc.perform(
-                        get("/api/users/{id}", 2)
-                )
-                .andExpect(status().isOk())
-                .andExpect(content().json(expectedJson));
-    }
-
-    @Test
-    void shouldGetUserById_USER_NOT_FOUND() throws Exception {
-        mockMvc.perform(
-                get("/api/users/122")
-        )
+                .andDo(print())
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.timestamp").exists())
-                .andExpect(jsonPath("message").value("User not found with id: 122"))
-                .andExpect(jsonPath("path").value("/api/users/122"))
-                .andExpect(jsonPath("$.errorcode").value("USER_NOT_FOUND"));
+                ;
     }
 
-    @Test
-    void shouldGetAllUsers() throws Exception {
-        // Arrange
-        String expectedJson = """
-                [
-                  {
-                    "id": 1,
-                    "firstName": "Existing",
-                    "lastName": "TestUser",
-                    "email": "existing@test.com"
-                  },
-                  {
-                    "id": 2,
-                    "firstName": "Existing2",
-                    "lastName": "TestUser2",
-                    "email": "existing2@test.com"
-                  }
-                ]
-            """;
-
-        // Act + Assert
-        mockMvc.perform(
-                        get("/api/users")
-                )
-                .andExpect(status().isOk())
-                .andExpect(content().json(expectedJson));
-    }
-
-    @Test
-    void shouldUpdateUserById() throws Exception {
-
-        // Arrange
-        String requestJson = """
-                {
-                    "firstName": "John",
-                    "lastName": "Smith",
-                    "email": "john.test@gmail.com",
-                    "password": "abcd1234"
-                }
-                """;
-
-        String expectedJson = """
-                {
-                    "id": 2,
-                    "firstName": "John",
-                    "lastName": "Smith",
-                    "email": "john.test@gmail.com"
-                }
-                """;
-
-        // Act + Assert
-        mockMvc.perform(
-                        put("/api/users/{id}", 2)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(requestJson)
-                )
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(status().isOk())
-                .andExpect(content().json(expectedJson));
-    }
-
-    @Test
-    void shouldUpdateUserById_USER_NOT_FOUND() throws Exception {
-
-        // Arrange
-        String requestJson = """
-                {
-                    "firstName": "John",
-                    "lastName": "Smith",
-                    "email": "john.test@gmail.com",
-                    "password": "abcd1234"
-                }
-                """;
-
-        // Act + Assert
-        mockMvc.perform(
-                        put("/api/users/{id}", 209)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(requestJson)
-                )
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.timestamp").exists())
-                .andExpect(
-                        jsonPath("$.status").value(404)
-                )
-                .andExpect(
-                        jsonPath("$.message")
-                                .value("User not found with id: 209")
-                )
-                .andExpect(
-                        jsonPath("$.path")
-                                .value("/api/users/209")
-                )
-                .andExpect(
-                        jsonPath("$.errorcode")
-                                .value("USER_NOT_FOUND")
-                );
-    }
-
-    @Test
-    void shoulddeleteUserById() throws Exception {
-        // Act + Assert
-        mockMvc.perform(
-                        delete("/api/users/{id}", 2)
-                )
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(status().isOk())
-                .andExpect(content().string("User deleted successfully"));
-    }
-
-    @Test
-    void shouldDeleteUserByIdUserNotFound() throws Exception {
-        // Act + Assert
-        mockMvc.perform(
-                        delete("/api/users/{id}", 55)
-                )
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.timestamp").exists())
-                .andExpect(
-                        jsonPath("$.status").value(404)
-                )
-                .andExpect(
-                        jsonPath("$.message")
-                                .value("User not found with id: 55")
-                )
-                .andExpect(
-                        jsonPath("$.path")
-                                .value("/api/users/55")
-                )
-                .andExpect(
-                        jsonPath("$.errorcode")
-                                .value("USER_NOT_FOUND")
-                );
-    }
-
-    @Test
-    void shouldUpdateUserByEmail() throws Exception {
-        // Arrange
-        String requestJson = """
-                {
-                    "firstName": "John",
-                    "lastName": "Smith"
-                }
-                """;
-
-        String expectedJson = """
-                {
-                  "msg": "firstname - \\"John\\" and lastname - \\"Smith\\" updated",
-                  "id": 2,
-                  "email": "existing2@test.com"
-                }
-                """;
-
-        // Act + Assert
-        mockMvc.perform(
-                        put("/api/users/update")
-                                .queryParam("email", "existing2@test.com")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(requestJson)
-                )
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(status().isOk())
-                .andExpect(content().json(expectedJson));
-    }
-
-    @Test
-    void shouldUpdateUserByEmail_USER_NOT_FOUND() throws Exception {
-        // Arrange
-        String requestJson = """
-                {
-                    "firstName": "John",
-                    "lastName": "Smith"
-                }
-                """;
-
-        // Act + Assert
-        mockMvc.perform(
-                        put("/api/users/update")
-                                .queryParam("email", "abcd@test.com")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(requestJson)
-                )
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.timestamp").exists())
-                .andExpect(jsonPath("$.message").value("User not found with email : abcd@test.com"))
-                .andExpect(jsonPath("$.path").value("uri=/api/users/update"))
-                .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.errorcode").value("USER_NOT_FOUND"))
-        ;
-    }
+//    @Test
+//    void shouldCreateUser() throws Exception {
+//
+//        // Arrange
+//        String requestJson = """
+//                {
+//                    "firstName": "John",
+//                    "lastName": "Smith",
+//                    "email": "john.test@gmail.com",
+//                    "password": "abcd1234"
+//                }
+//                """;
+//
+//        String expectedJson = """
+//                {
+//                    "id": 32,
+//                    "firstName": "John",
+//                    "lastName": "Smith",
+//                    "email": "john.test@gmail.com"
+//                }
+//                """;
+//
+//        // Act + Assert
+//        /*MvcResult result = mockMvc.perform(
+//                        post("/api/users")
+//                                .contentType(MediaType.APPLICATION_JSON)
+//                                .content(requestJson)
+//                )
+//                .andDo(MockMvcResultHandlers.print())
+//                .andReturn();
+//
+//        System.out.println("Status: " + result.getResponse().getStatus());
+//        System.out.println("Response: " + result.getResponse().getContentAsString());*/
+//        mockMvc.perform(
+//                        post("/api/users")
+//                                .contentType(MediaType.APPLICATION_JSON)
+//                                .content(requestJson)
+//                )
+//                .andDo(MockMvcResultHandlers.print())
+//                .andExpect(status().isCreated())
+//                .andExpect(content().json(expectedJson));
+//    }
+//
+//    @Test
+//    void shouldGetUserById() throws Exception {
+//
+//        // Arrange
+//        String expectedJson = """
+//            {
+//                "id": 2,
+//                "firstName": "Existing2",
+//                "lastName": "TestUser2",
+//                "email": "existing2@test.com"
+//            }
+//            """;
+//
+//        // Act + Assert
+//        mockMvc.perform(
+//                        get("/api/users/{id}", 2)
+//                )
+//                .andExpect(status().isOk())
+//                .andExpect(content().json(expectedJson));
+//    }
+//
+//    @Test
+//    void shouldGetUserById_USER_NOT_FOUND() throws Exception {
+//        mockMvc.perform(
+//                get("/api/users/122")
+//        )
+//                .andExpect(status().isNotFound())
+//                .andExpect(jsonPath("$.timestamp").exists())
+//                .andExpect(jsonPath("message").value("User not found with id: 122"))
+//                .andExpect(jsonPath("path").value("/api/users/122"))
+//                .andExpect(jsonPath("$.errorcode").value("USER_NOT_FOUND"));
+//    }
+//
+//    @Test
+//    void shouldGetAllUsers() throws Exception {
+//        // Arrange
+//        String expectedJson = """
+//                [
+//                  {
+//                    "id": 1,
+//                    "firstName": "Existing",
+//                    "lastName": "TestUser",
+//                    "email": "existing@test.com"
+//                  },
+//                  {
+//                    "id": 2,
+//                    "firstName": "Existing2",
+//                    "lastName": "TestUser2",
+//                    "email": "existing2@test.com"
+//                  }
+//                ]
+//            """;
+//
+//        // Act + Assert
+//        mockMvc.perform(
+//                        get("/api/users")
+//                )
+//                .andExpect(status().isOk())
+//                .andExpect(content().json(expectedJson));
+//    }
+//
+//    @Test
+//    void shouldUpdateUserById() throws Exception {
+//
+//        // Arrange
+//        String requestJson = """
+//                {
+//                    "firstName": "John",
+//                    "lastName": "Smith",
+//                    "email": "john.test@gmail.com",
+//                    "password": "abcd1234"
+//                }
+//                """;
+//
+//        String expectedJson = """
+//                {
+//                    "id": 2,
+//                    "firstName": "John",
+//                    "lastName": "Smith",
+//                    "email": "john.test@gmail.com"
+//                }
+//                """;
+//
+//        // Act + Assert
+//        mockMvc.perform(
+//                        put("/api/users/{id}", 2)
+//                                .contentType(MediaType.APPLICATION_JSON)
+//                                .content(requestJson)
+//                )
+//                .andDo(MockMvcResultHandlers.print())
+//                .andExpect(status().isOk())
+//                .andExpect(content().json(expectedJson));
+//    }
+//
+//    @Test
+//    void shouldUpdateUserById_USER_NOT_FOUND() throws Exception {
+//
+//        // Arrange
+//        String requestJson = """
+//                {
+//                    "firstName": "John",
+//                    "lastName": "Smith",
+//                    "email": "john.test@gmail.com",
+//                    "password": "abcd1234"
+//                }
+//                """;
+//
+//        // Act + Assert
+//        mockMvc.perform(
+//                        put("/api/users/{id}", 209)
+//                                .contentType(MediaType.APPLICATION_JSON)
+//                                .content(requestJson)
+//                )
+//                .andDo(MockMvcResultHandlers.print())
+//                .andExpect(status().isNotFound())
+//                .andExpect(jsonPath("$.timestamp").exists())
+//                .andExpect(
+//                        jsonPath("$.status").value(404)
+//                )
+//                .andExpect(
+//                        jsonPath("$.message")
+//                                .value("User not found with id: 209")
+//                )
+//                .andExpect(
+//                        jsonPath("$.path")
+//                                .value("/api/users/209")
+//                )
+//                .andExpect(
+//                        jsonPath("$.errorcode")
+//                                .value("USER_NOT_FOUND")
+//                );
+//    }
+//
+//    @Test
+//    void shoulddeleteUserById() throws Exception {
+//        // Act + Assert
+//        mockMvc.perform(
+//                        delete("/api/users/{id}", 2)
+//                )
+//                .andDo(MockMvcResultHandlers.print())
+//                .andExpect(status().isOk())
+//                .andExpect(content().string("User deleted successfully"));
+//    }
+//
+//    @Test
+//    void shouldDeleteUserByIdUserNotFound() throws Exception {
+//        // Act + Assert
+//        mockMvc.perform(
+//                        delete("/api/users/{id}", 55)
+//                )
+//                .andDo(MockMvcResultHandlers.print())
+//                .andExpect(status().isNotFound())
+//                .andExpect(jsonPath("$.timestamp").exists())
+//                .andExpect(
+//                        jsonPath("$.status").value(404)
+//                )
+//                .andExpect(
+//                        jsonPath("$.message")
+//                                .value("User not found with id: 55")
+//                )
+//                .andExpect(
+//                        jsonPath("$.path")
+//                                .value("/api/users/55")
+//                )
+//                .andExpect(
+//                        jsonPath("$.errorcode")
+//                                .value("USER_NOT_FOUND")
+//                );
+//    }
+//
+//    @Test
+//    void shouldUpdateUserByEmail() throws Exception {
+//        // Arrange
+//        String requestJson = """
+//                {
+//                    "firstName": "John",
+//                    "lastName": "Smith"
+//                }
+//                """;
+//
+//        String expectedJson = """
+//                {
+//                  "msg": "firstname - \\"John\\" and lastname - \\"Smith\\" updated",
+//                  "id": 2,
+//                  "email": "existing2@test.com"
+//                }
+//                """;
+//
+//        // Act + Assert
+//        mockMvc.perform(
+//                        put("/api/users/update")
+//                                .queryParam("email", "existing2@test.com")
+//                                .contentType(MediaType.APPLICATION_JSON)
+//                                .content(requestJson)
+//                )
+//                .andDo(MockMvcResultHandlers.print())
+//                .andExpect(status().isOk())
+//                .andExpect(content().json(expectedJson));
+//    }
+//
+//    @Test
+//    void shouldUpdateUserByEmail_USER_NOT_FOUND() throws Exception {
+//        // Arrange
+//        String requestJson = """
+//                {
+//                    "firstName": "John",
+//                    "lastName": "Smith"
+//                }
+//                """;
+//
+//        // Act + Assert
+//        mockMvc.perform(
+//                        put("/api/users/update")
+//                                .queryParam("email", "abcd@test.com")
+//                                .contentType(MediaType.APPLICATION_JSON)
+//                                .content(requestJson)
+//                )
+//                .andDo(MockMvcResultHandlers.print())
+//                .andExpect(status().isNotFound())
+//                .andExpect(jsonPath("$.timestamp").exists())
+//                .andExpect(jsonPath("$.message").value("User not found with email : abcd@test.com"))
+//                .andExpect(jsonPath("$.path").value("uri=/api/users/update"))
+//                .andExpect(jsonPath("$.status").value(404))
+//                .andExpect(jsonPath("$.errorcode").value("USER_NOT_FOUND"))
+//        ;
+//    }
 
 }

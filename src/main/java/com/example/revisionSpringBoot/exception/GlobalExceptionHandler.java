@@ -43,5 +43,63 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
     }
+
+    @ExceptionHandler(DownstreamServiceException.class)
+    public ResponseEntity<ErrorDetails> handleDownstreamServiceException(
+            DownstreamServiceException exception,
+            HttpServletRequest request) {
+
+        ErrorDetails errorDetails = new ErrorDetails();
+
+        errorDetails.setTimestamp(LocalDateTime.now());
+
+        errorDetails.setMessage(
+                exception.getServiceName()
+                        + " is currently unavailable"
+        );
+
+        errorDetails.setPath(request.getRequestURI());
+
+        errorDetails.setStatus(
+                HttpStatus.BAD_GATEWAY.value()
+        );
+
+        errorDetails.setErrorcode(
+                "DOWNSTREAM_SERVICE_ERROR"
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_GATEWAY)
+                .body(errorDetails);
+    }
+
+    @ExceptionHandler(DownstreamServiceTimeoutException.class)
+    public ResponseEntity<ErrorDetails> handleDownstreamServiceTimeout(
+            DownstreamServiceTimeoutException exception,
+            HttpServletRequest request) {
+
+        ErrorDetails errorDetails = new ErrorDetails();
+
+        errorDetails.setTimestamp(LocalDateTime.now());
+
+        errorDetails.setMessage(
+                exception.getServiceName()
+                        + " did not respond in time"
+        );
+
+        errorDetails.setPath(request.getRequestURI());
+
+        errorDetails.setStatus(
+                HttpStatus.GATEWAY_TIMEOUT.value()
+        );
+
+        errorDetails.setErrorcode(
+                "DOWNSTREAM_SERVICE_TIMEOUT"
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.GATEWAY_TIMEOUT)
+                .body(errorDetails);
+    }
 }
 

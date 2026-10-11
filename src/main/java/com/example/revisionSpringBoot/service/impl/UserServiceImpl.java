@@ -3,10 +3,11 @@ package com.example.revisionSpringBoot.service.impl;
 
 import com.example.revisionSpringBoot.client.AddressClient;
 import com.example.revisionSpringBoot.client.AddressClientImpl;
-import com.example.revisionSpringBoot.dto.AddressResponse;
-import com.example.revisionSpringBoot.dto.UserRequest;
-import com.example.revisionSpringBoot.dto.UserResponse;
+import com.example.revisionSpringBoot.client.OrderClient;
+import com.example.revisionSpringBoot.dto.*;
 import com.example.revisionSpringBoot.entity.User;
+import com.example.revisionSpringBoot.exception.DownstreamServiceException;
+import com.example.revisionSpringBoot.exception.DownstreamServiceTimeoutException;
 import com.example.revisionSpringBoot.exception.ResourceNotFoundException;
 import com.example.revisionSpringBoot.exception.UserNotFoundException;
 import com.example.revisionSpringBoot.mapper.AutoUserMapper;
@@ -18,9 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,10 +27,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class UserServiceImpl implements UserService {
 
-    private UserRepository userRepository;
-
-    private AutoUserMapper autoUserMapper;
-
+    private final OrderClient orderClient;
+    private final UserRepository userRepository;
+    private final AutoUserMapper autoUserMapper;
     private final AddressClient addressClient;
 
     @Override
@@ -47,7 +45,7 @@ public class UserServiceImpl implements UserService {
         return saveUserResponse;
     }
 
-    @Override
+    /*@Override
     public UserResponse getUserById(int userId) {
         log.info("in user service implementation : received user id : -----> {}", userId);
         // 1. Get user from local database
@@ -61,16 +59,189 @@ public class UserServiceImpl implements UserService {
         UserResponse userResponse =
                 autoUserMapper.mapToUserResponse(user);
 
-        // 3. Get addresses from Beeceptor
+        // 3. Get addresses from Beeceptor or bruno
         List<AddressResponse> addresses =
                 addressClient.getAddressesByUserId((long) userId);
 
         // 4. Add addresses to UserResponse
         userResponse.setAddresses(addresses);
 
+        // 5. Get Orders from bruno
+        List<OrderResponse> orders = orderClient.getOrdersByUserId((long) userId);
+
+        userResponse.setOrders(orders);
+
+        return userResponse;
+    }*/
+
+    /*@Override
+    public UserResponse getUserById(int userId) {
+        log.info("received user id: {}", userId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found with id: " + userId));
+
+        UserResponse userResponse = autoUserMapper.mapToUserResponse(user);
+        List<PartialResponseWarning> warnings = new ArrayList<>();
+
+        // Address service
+        try {
+            List<AddressResponse> addresses =
+                    addressClient.getAddressesByUserId((long) userId);
+            userResponse.setAddresses(addresses);
+        } catch (DownstreamServiceException | DownstreamServiceTimeoutException e) {
+            // Service is actually down - add warning and continue
+            log.warn("Address service unavailable for userId={}", userId);
+            userResponse.setAddresses(Collections.emptyList());
+            warnings.add(
+                    new PartialResponseWarning(
+                            "ADDRESS_SERVICE",
+                            "Address information is temporarily unavailable"
+                    )
+            );
+        }
+
+        // Order service
+        try {
+            List<OrderResponse> orders =
+                    orderClient.getOrdersByUserId((long) userId);
+            userResponse.setOrders(orders);
+        } catch (DownstreamServiceException | DownstreamServiceTimeoutException e) {
+            // Service is actually down - add warning and continue
+            log.warn("Order service unavailable for userId={}", userId);
+            userResponse.setOrders(Collections.emptyList());
+            warnings.add(
+                    new PartialResponseWarning(
+                            "ORDER_SERVICE",
+                            "Order information is temporarily unavailable"
+                    )
+            );
+        }
+
+        userResponse.setWarnings(warnings);
+        return userResponse;
+    }*/
+
+    @Override
+    public UserResponse getUserById(int userId) {
+        log.info("received user id: {}", userId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found with id: " + userId
+                        ));
+
+        UserResponse userResponse =
+                autoUserMapper.mapToUserResponse(user);
+
+        List<PartialResponseWarning> warnings =
+                new ArrayList<>();
+
+        ServiceCallResult<List<AddressResponse>> addressResult =
+                addressClient.getAddressesByUserId((long) userId);
+
+        userResponse.setAddresses(
+                addressResult.getData() != null
+                        ? addressResult.getData()
+                        : Collections.emptyList()
+        );
+
+        if (!addressResult.isHasData()
+                && addressResult.getWarning() != null) {
+            warnings.add(addressResult.getWarning());
+        }
+
+        ServiceCallResult<List<OrderResponse>> orderResult =
+                orderClient.getOrdersByUserId((long) userId);
+
+        userResponse.setOrders(
+                orderResult.getData() != null
+                        ? orderResult.getData()
+                        : Collections.emptyList()
+        );
+
+        if (!orderResult.isHasData()
+                && orderResult.getWarning() != null) {
+            warnings.add(orderResult.getWarning());
+        }
+
+        userResponse.setWarnings(warnings);
 
         return userResponse;
     }
+
+   /* @Override
+    public UserResponse getUserById(int userId) {
+
+        log.info("received user id: {}", userId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found with id: " + userId));
+
+        UserResponse userResponse =
+                autoUserMapper.mapToUserResponse(user);
+
+        List<PartialResponseWarning> warnings = new ArrayList<>();
+
+        // Address service
+        try {
+
+            List<AddressResponse> addresses =
+                    addressClient.getAddressesByUserId((long) userId);
+
+            userResponse.setAddresses(addresses);
+
+        } catch (Exception e) {
+
+            log.error(
+                    "Address service unavailable for userId={}",
+                    userId,
+                    e);
+
+            userResponse.setAddresses(Collections.emptyList());
+
+            warnings.add(
+                    new PartialResponseWarning(
+                            "ADDRESS_SERVICE",
+                            "Address information is temporarily unavailable"
+                    )
+            );
+        }
+
+        // Order service
+        try {
+
+            List<OrderResponse> orders =
+                    orderClient.getOrdersByUserId((long) userId);
+
+            userResponse.setOrders(orders);
+
+        } catch (Exception e) {
+
+            log.error(
+                    "Order service unavailable for userId={}",
+                    userId,
+                    e);
+
+            userResponse.setOrders(Collections.emptyList());
+
+            warnings.add(
+                    new PartialResponseWarning(
+                            "ORDER_SERVICE",
+                            "Order information is temporarily unavailable"
+                    )
+            );
+        }
+
+        userResponse.setWarnings(warnings);
+
+        return userResponse;
+    }*/
 
     @Override
     public List<UserResponse> getAllUsers() {

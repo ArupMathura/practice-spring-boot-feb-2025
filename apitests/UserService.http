@@ -17,6 +17,9 @@ GET http://localhost:8080/api/users
 ### Get User By ID - to fetch the address - onlly user 12 has the address
 GET http://localhost:8080/api/users/12
 
+### Get User By ID - to fetch the address - onlly user 12 has the address
+GET http://localhost:8080/api/users/2
+
 
 ### Update User
 PUT http://localhost:8080/api/users/4
@@ -42,3 +45,13 @@ Content-Type: application/json
 
 ### Delete User By ID
 DELETE http://localhost:8080/api/users/4
+
+
+###
+GET https://2f7c71ac-2c30-49f4-83ec-768228dd4245.mock.pstmn.io/api/orders/user/1000
+
+###
+GET https://asdf1.free.beeceptor.com/api/orders/user/1001
+
+###
+GET localhost:4000/api/addresses/user/1

@@ -19,4 +19,11 @@ public class UserResponse {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<AddressResponse> addresses;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<OrderResponse> orders;
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private List<PartialResponseWarning> warnings;
+
 }

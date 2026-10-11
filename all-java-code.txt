@@ -1,0 +1,876 @@
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\RevisionSpringBootApplication.java ====================
+package com.example.revisionSpringBoot;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+@SpringBootApplication
+public class RevisionSpringBootApplication {
+	public static void main(String[] args) {
+		SpringApplication.run(RevisionSpringBootApplication.class, args);
+	}
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\bean\Student.java ====================
+package com.example.revisionSpringBoot.bean;
+public class Student {
+    int id;
+    String firstName;
+    String lastName;
+    public Student(int id, String firstName, String lastName) {
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+    }
+    public Student() {
+    }
+    public int getId() {
+        return id;
+    }
+    public void setId(int id) {
+        this.id = id;
+    }
+    public String getFirstName() {
+        return firstName;
+    }
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+    public String getLastName() {
+        return lastName;
+    }
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\client\AddressClient.java ====================
+package com.example.revisionSpringBoot.client;
+import com.example.revisionSpringBoot.dto.AddressResponse;
+import com.example.revisionSpringBoot.dto.ServiceCallResult;
+import java.util.List;
+public interface AddressClient {
+    ServiceCallResult<List<AddressResponse>> getAddressesByUserId(Long userId);
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\client\AddressClientImpl.java ====================
+package com.example.revisionSpringBoot.client;
+import com.example.revisionSpringBoot.dto.AddressResponse;
+import com.example.revisionSpringBoot.dto.ServiceCallResult;
+import com.example.revisionSpringBoot.exception.DownstreamServiceException;
+import com.example.revisionSpringBoot.exception.DownstreamServiceTimeoutException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
+import java.net.URI;
+import java.util.Collections;
+import java.util.List;
+@Component
+@Profile("!test")
+@Slf4j
+public class AddressClientImpl implements AddressClient {
+    private final RestClient restClient;
+    public AddressClientImpl(
+            RestClient.Builder restClientBuilder,
+            @Value("${address.service.base-url}") String baseUrl) {
+        this.restClient = restClientBuilder
+                .baseUrl(baseUrl)
+                .build();
+    }
+    @Override
+    public ServiceCallResult<List<AddressResponse>> getAddressesByUserId(Long userId) {
+        try {
+            List<AddressResponse> addresses = restClient
+                    .get()
+                    .uri(uriBuilder -> {
+                        URI uri = uriBuilder
+                                .path("/api/addresses/user/{userId}")
+                                .build(userId);
+                        log.info("Calling address URL: {}", uri);
+                        return uri;
+                    })
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<List<AddressResponse>>() {});
+            if (addresses == null || addresses.isEmpty()) {
+                return ServiceCallResult.noData(
+                        "ADDRESS_SERVICE",
+                        "No addresses found for this user"
+                );
+            }
+            return ServiceCallResult.withData(addresses);
+        } catch (RestClientResponseException e) {
+            if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
+                log.debug("No addresses found for userId={}", userId);
+                return ServiceCallResult.noData(
+                        "ADDRESS_SERVICE",
+                        "No addresses found for this user"
+                );
+            }
+            if (e.getStatusCode().is5xxServerError()) {
+                throw new DownstreamServiceException(
+                        "ADDRESS_SERVICE",
+                        HttpStatus.BAD_GATEWAY,
+                        "Address service returned HTTP "
+                                + e.getStatusCode().value(),
+                        e
+                );
+            }
+            throw new DownstreamServiceException(
+                    "ADDRESS_SERVICE",
+                    HttpStatus.BAD_GATEWAY,
+                    "Address service returned HTTP "
+                            + e.getStatusCode().value(),
+                    e
+            );
+        } catch (ResourceAccessException e) {
+            throw new DownstreamServiceTimeoutException(
+                    "ADDRESS_SERVICE",
+                    "Address service is unavailable or timed out",
+                    e
+            );
+        }
+    }
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\client\OrderClient.java ====================
+package com.example.revisionSpringBoot.client;
+import com.example.revisionSpringBoot.dto.OrderResponse;
+import com.example.revisionSpringBoot.dto.ServiceCallResult;
+import java.util.List;
+public interface OrderClient {
+    ServiceCallResult<List<OrderResponse>> getOrdersByUserId(Long userId);
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\client\OrderClientImpl.java ====================
+package com.example.revisionSpringBoot.client;
+import com.example.revisionSpringBoot.dto.OrderResponse;
+import com.example.revisionSpringBoot.dto.ServiceCallResult;
+import com.example.revisionSpringBoot.exception.DownstreamServiceException;
+import com.example.revisionSpringBoot.exception.DownstreamServiceTimeoutException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import java.net.URI;
+import java.util.Collections;
+import java.util.List;
+@Component
+@Slf4j
+public class OrderClientImpl implements OrderClient {
+    private final WebClient webClient;
+    public OrderClientImpl(
+            @Qualifier("orderWebClient") WebClient webClient) {
+        this.webClient = webClient;
+    }
+    @Override
+    public ServiceCallResult<List<OrderResponse>> getOrdersByUserId(Long userId) {
+        try {
+            List<OrderResponse> orders = webClient
+                    .get()
+                    .uri(uriBuilder -> {
+                        URI uri = uriBuilder
+                                .path("/api/orders/user/{userId}")
+                                .build(userId);
+                        log.info("Calling order service URL: {}", uri);
+                        return uri;
+                    })
+                    .retrieve()
+                    .bodyToFlux(OrderResponse.class)
+                    .collectList()
+                    .block();
+            if (orders == null || orders.isEmpty()) {
+                return ServiceCallResult.noData(
+                        "ORDER_SERVICE",
+                        "No orders found for this user"
+                );
+            }
+            return ServiceCallResult.withData(orders);
+        } catch (WebClientResponseException e) {
+            if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
+                log.debug("No orders found for userId={}", userId);
+                return ServiceCallResult.noData(
+                        "ORDER_SERVICE",
+                        "No orders found for this user"
+                );
+            }
+            if (e.getStatusCode().is5xxServerError()) {
+                log.error(
+                        "Order service returned HTTP {}",
+                        e.getStatusCode().value(),
+                        e
+                );
+                throw new DownstreamServiceException(
+                        "ORDER_SERVICE",
+                        HttpStatus.BAD_GATEWAY,
+                        "Order service returned HTTP "
+                                + e.getStatusCode().value(),
+                        e
+                );
+            }
+            throw new DownstreamServiceException(
+                    "ORDER_SERVICE",
+                    HttpStatus.BAD_GATEWAY,
+                    "Order service returned HTTP "
+                            + e.getStatusCode().value(),
+                    e
+            );
+        } catch (WebClientRequestException e) {
+            log.error(
+                    "Order service is unavailable or timed out for userId={}",
+                    userId,
+                    e
+            );
+            throw new DownstreamServiceTimeoutException(
+                    "ORDER_SERVICE",
+                    "Order service is unavailable or timed out",
+                    e
+            );
+        }
+    }
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\config\WebClientConfig.java ====================
+package com.example.revisionSpringBoot.config;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.reactive.function.client.WebClient;
+@Configuration
+public class WebClientConfig {
+    @Bean
+    public WebClient orderWebClient(
+            @Value("${order.service.base-url}") String baseUrl) {
+        return WebClient.builder()
+                .baseUrl(baseUrl)
+                .build();
+    }
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\controller\HelloController.java ====================
+package com.example.revisionSpringBoot.controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+@RestController
+public class HelloController {
+    @GetMapping("/hello-controller")
+    public String helloController() {
+        return "hello love! how are you doing?";
+    }
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\controller\StudentController.java ====================
+package com.example.revisionSpringBoot.controller;
+import com.example.revisionSpringBoot.bean.Student;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.ArrayList;
+import java.util.List;
+@Slf4j
+@RestController
+public class StudentController {
+    @GetMapping("students/get-student")
+    public ResponseEntity<Student> getStudent() {
+        Student student = new Student(101, "Arup", "Mathura");
+        return ResponseEntity.ok(student);
+    }
+    @GetMapping("students/get-students")
+    public ResponseEntity<List<Student>> getStudents() {
+        List<Student> students = new ArrayList<>();
+        students.add(new Student(102, "aaa", "aaaaa"));
+        students.add(new Student(103, "bbb", "bbbbb"));
+        students.add(new Student(104, "ccc", "ccccc"));
+        students.add(new Student(105, "ddd", "ddddd"));
+        return ResponseEntity.ok(students);
+    }
+    @GetMapping("students/{id}/{first-name}/{last-name}")
+    public ResponseEntity<Student> studentPathVariable(@PathVariable("id") int studentId,
+                                       @PathVariable("first-name") String firstName,
+                                       @PathVariable("last-name") String lastName) {
+        Student student = new Student(studentId, firstName, lastName);
+        return ResponseEntity.ok(student);
+    }
+    @GetMapping("/students/query")
+    public ResponseEntity<Student> studentQueryParameter(@RequestParam int id,
+                                         @RequestParam String firstName,
+                                         @RequestParam String lastName) {
+        Student student = new Student(id, firstName, lastName);
+        return ResponseEntity.ok(student);
+    }
+    @PostMapping("/students/create")
+    public ResponseEntity<Student> createStudent(@RequestBody Student student) {
+        log.info("Student ID: {}", student.getId());
+        log.info("First Name: {}", student.getFirstName());
+        log.info("Last Name: {}", student.getLastName());
+        return new ResponseEntity<>(student, HttpStatus.CREATED);
+    }
+    @PutMapping("students/{id}/update")
+    public ResponseEntity<Student> updateStudent(@RequestBody Student student, @PathVariable("id") int studentId) {
+        log.info("Updating student with ID: {}", studentId);
+        log.info("First Name: {}", student.getFirstName());
+        log.info("Last Name: {}", student.getLastName());
+        student.setId(studentId); // ✅ Set the ID from the path variable
+        return ResponseEntity.ok(student);
+    }
+    @DeleteMapping("students/{id}/delete")
+    public ResponseEntity<String> deleteStudent(@PathVariable("id") int studentId) {
+        log.warn("deleting student with id : {}", studentId);
+        return ResponseEntity.ok("student info deleted successfully");
+    }
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\controller\UserController.java ====================
+package com.example.revisionSpringBoot.controller;
+import com.example.revisionSpringBoot.dto.UserRequest;
+import com.example.revisionSpringBoot.dto.UserResponse;
+import com.example.revisionSpringBoot.exception.ErrorDetails;
+import com.example.revisionSpringBoot.exception.ResourceNotFoundException;
+import com.example.revisionSpringBoot.service.UserService;
+import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.WebRequest;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+@RestController
+@AllArgsConstructor
+@Slf4j
+@RequestMapping("api/users")
+public class UserController {
+    private UserService userService;
+    @PostMapping
+    public ResponseEntity<UserResponse> createUser(@RequestBody @Valid UserRequest userRequest) {
+        log.info("in user controller : received user : -----> {}", userRequest);
+        UserResponse savedUser = userService.createUser(userRequest);
+        log.info("in user controller : user id = {} name = {} {} email = {}", savedUser.getId(), savedUser.getFirstName(), savedUser.getLastName(), savedUser.getEmail());
+        return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
+    }
+    @GetMapping("{id}")
+    public ResponseEntity<UserResponse> getUserById(@PathVariable("id") int userId) {
+        UserResponse getUser = userService.getUserById(userId);
+        log.info("in user controller : user id --> {}, name --> {} {}, email --> {}", getUser.getId(), getUser.getFirstName(), getUser.getLastName(), getUser.getEmail());
+        return new ResponseEntity<>(getUser, HttpStatus.OK);
+    }
+    @GetMapping
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+        List<UserResponse> userList = userService.getAllUsers();
+        log.info("in user controller : All Users: {}", userList);
+        return new ResponseEntity<>(userList, HttpStatus.OK);
+    }
+    @PutMapping("{id}")
+    public ResponseEntity<UserResponse> updateUserById(@PathVariable("id") int userId, @RequestBody UserRequest userRequest) {
+        UserResponse updateUser = userService.updateUserById(userId, userRequest);
+        log.info("in user controller : user id --> {}, name --> {} {}, email --> {}", updateUser.getId(), updateUser.getFirstName(), updateUser.getLastName(), updateUser.getEmail());
+        return new ResponseEntity<>(updateUser, HttpStatus.OK);
+    }
+    @DeleteMapping("{id}")
+    public ResponseEntity<String> deleteUserById(@PathVariable("id") int userId) {
+        log.info("In user controller: received user id: {}", userId);
+        userService.deleteUserById(userId);
+        return new ResponseEntity<>("User deleted successfully", HttpStatus.OK);
+    }
+    @PutMapping("/update")
+    public ResponseEntity<Map<String, Object>> updateUserByEmail(
+            @RequestParam String email,
+            @RequestBody Map<String, String> userDetails) {
+        String firstName = userDetails.get("firstName");
+        String lastName = userDetails.get("lastName");
+        Map<String, Object> response = userService.updateUserByEmail(email, firstName, lastName);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\dto\AddressResponse.java ====================
+package com.example.revisionSpringBoot.dto;
+public record AddressResponse(
+        Long id,
+        Long userId,
+        String addressLine1,
+        String city,
+        String state,
+        String zipCode
+) {
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\dto\OrderResponse.java ====================
+package com.example.revisionSpringBoot.dto;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class OrderResponse {
+    private Long id;
+    private Long userId;
+    private LocalDate orderDate;
+    private String status;
+    private BigDecimal totalAmount;
+    private String paymentStatus;
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\dto\PartialResponseWarning.java ====================
+package com.example.revisionSpringBoot.dto;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class PartialResponseWarning {
+    private String service;
+    private String message;
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\dto\ServiceCallResult.java ====================
+package com.example.revisionSpringBoot.dto;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class ServiceCallResult<T> {
+    private T data;
+    private boolean hasData;
+    private PartialResponseWarning warning;
+    public static <T> ServiceCallResult<T> withData(T data) {
+        boolean hasData = data != null;
+        if (data instanceof java.util.Collection<?> collection) {
+            hasData = !collection.isEmpty();
+        }
+        return new ServiceCallResult<>(
+                data,
+                hasData,
+                null
+        );
+    }
+    public static <T> ServiceCallResult<T> noData(
+            String serviceName,
+            String message) {
+        return new ServiceCallResult<>(
+                null,
+                false,
+                new PartialResponseWarning(
+                        serviceName,
+                        message
+                )
+        );
+    }
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\dto\UserDto.java ====================
+package com.example.revisionSpringBoot.dto;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\dto\UserRequest.java ====================
+package com.example.revisionSpringBoot.dto;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.*;
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString
+public class UserRequest {
+    @NotBlank(message = "First name is required")
+    private String firstName;
+    @NotBlank(message = "Last name is required")
+    private String lastName;
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email must be valid")
+    private String email;
+    @NotBlank(message = "Password is required")
+    @Size(min = 8, message = "Password must be at least 8 characters")
+    private String password;
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\dto\UserResponse.java ====================
+package com.example.revisionSpringBoot.dto;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import java.util.List;
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class UserResponse {
+    private int id;
+    private String firstName;
+    private String lastName;
+    private String email;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<AddressResponse> addresses;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<OrderResponse> orders;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private List<PartialResponseWarning> warnings;
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\entity\User.java ====================
+package com.example.revisionSpringBoot.entity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import lombok.*;
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
+@Entity
+@Table(name = "users")
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+    @Column(nullable = false)
+    private String firstName;
+    @Column(nullable = false)
+    private String lastName;
+    @Column(nullable = false, unique = true)
+    private String email;
+    @JsonIgnore             // This hides the password field in the response
+    @Column(nullable = false)
+    private String password;
+    @SuppressWarnings("unused")
+    public User(String firstName, String lastName, String email) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+    }
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\exception\DownstreamServiceException.java ====================
+package com.example.revisionSpringBoot.exception;
+import lombok.Getter;
+import org.springframework.http.HttpStatus;
+@Getter
+public class DownstreamServiceException extends RuntimeException {
+    private final String serviceName;
+    private final HttpStatus status;
+    public DownstreamServiceException(
+            String serviceName,
+            HttpStatus status,
+            String message,
+            Throwable cause) {
+        super(message, cause);
+        this.serviceName = serviceName;
+        this.status = status;
+    }
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\exception\DownstreamServiceTimeoutException.java ====================
+package com.example.revisionSpringBoot.exception;
+import lombok.Getter;
+import org.springframework.http.HttpStatus;
+@Getter
+public class DownstreamServiceTimeoutException extends RuntimeException {
+    private final String serviceName;
+    public DownstreamServiceTimeoutException(
+            String serviceName,
+            String message,
+            Throwable cause) {
+        super(message, cause);
+        this.serviceName = serviceName;
+    }
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\exception\ErrorDetails.java ====================
+package com.example.revisionSpringBoot.exception;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import java.time.LocalDateTime;
+@Setter
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
+public class ErrorDetails {
+    private LocalDateTime timestamp;
+    private String message;
+    private String path;
+    private int status;
+    private String errorcode;
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\exception\GlobalExceptionHandler.java ====================
+package com.example.revisionSpringBoot.exception;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
+import java.time.LocalDateTime;
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorDetails> handleUserNotFound(
+            UserNotFoundException ex,
+            HttpServletRequest request) {
+        ErrorDetails errorDetails = new ErrorDetails();
+        errorDetails.setTimestamp(LocalDateTime.now());
+        errorDetails.setMessage(ex.getMessage());
+        errorDetails.setPath(request.getRequestURI());
+        errorDetails.setStatus(HttpStatus.NOT_FOUND.value());
+        errorDetails.setErrorcode("USER_NOT_FOUND");
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(errorDetails);
+    }
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorDetails> handleResourceNotFoundException(ResourceNotFoundException exception, WebRequest webRequest) {
+        ErrorDetails errorDetails = new ErrorDetails(
+                LocalDateTime.now(),
+                exception.getMessage(),
+                webRequest.getDescription(false),
+                HttpStatus.NOT_FOUND.value(),
+                "USER_NOT_FOUND"
+        );
+        return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
+    }
+    @ExceptionHandler(DownstreamServiceException.class)
+    public ResponseEntity<ErrorDetails> handleDownstreamServiceException(
+            DownstreamServiceException exception,
+            HttpServletRequest request) {
+        ErrorDetails errorDetails = new ErrorDetails();
+        errorDetails.setTimestamp(LocalDateTime.now());
+        errorDetails.setMessage(
+                exception.getServiceName()
+                        + " is currently unavailable"
+        );
+        errorDetails.setPath(request.getRequestURI());
+        errorDetails.setStatus(
+                HttpStatus.BAD_GATEWAY.value()
+        );
+        errorDetails.setErrorcode(
+                "DOWNSTREAM_SERVICE_ERROR"
+        );
+        return ResponseEntity
+                .status(HttpStatus.BAD_GATEWAY)
+                .body(errorDetails);
+    }
+    @ExceptionHandler(DownstreamServiceTimeoutException.class)
+    public ResponseEntity<ErrorDetails> handleDownstreamServiceTimeout(
+            DownstreamServiceTimeoutException exception,
+            HttpServletRequest request) {
+        ErrorDetails errorDetails = new ErrorDetails();
+        errorDetails.setTimestamp(LocalDateTime.now());
+        errorDetails.setMessage(
+                exception.getServiceName()
+                        + " did not respond in time"
+        );
+        errorDetails.setPath(request.getRequestURI());
+        errorDetails.setStatus(
+                HttpStatus.GATEWAY_TIMEOUT.value()
+        );
+        errorDetails.setErrorcode(
+                "DOWNSTREAM_SERVICE_TIMEOUT"
+        );
+        return ResponseEntity
+                .status(HttpStatus.GATEWAY_TIMEOUT)
+                .body(errorDetails);
+    }
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\exception\ResourceNotFoundException.java ====================
+package com.example.revisionSpringBoot.exception;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+@ResponseStatus(value = HttpStatus.NOT_FOUND)
+public class ResourceNotFoundException extends RuntimeException{
+    private String resourceName;
+    private String fieldName;
+    private Object fieldValue;
+    public ResourceNotFoundException(String resourceName, String fieldName, Object fieldValue) {
+        super(String.format("%s not found with %s : %s", resourceName, fieldName, fieldValue));
+        this.resourceName = resourceName;
+        this.fieldName = fieldName;
+        this.fieldValue = fieldValue;
+    }
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\exception\UserNotFoundException.java ====================
+package com.example.revisionSpringBoot.exception;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+@ResponseStatus(HttpStatus.NOT_FOUND)
+public class UserNotFoundException extends RuntimeException {
+    public UserNotFoundException(String message) {
+        super(message);
+    }
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\mapper\AutoUserMapper.java ====================
+package com.example.revisionSpringBoot.mapper;
+import com.example.revisionSpringBoot.dto.UserRequest;
+import com.example.revisionSpringBoot.dto.UserResponse;
+import com.example.revisionSpringBoot.entity.User;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Mappings;
+@Mapper(componentModel = "spring") // Enables Spring to inject this mapper
+public interface AutoUserMapper {
+    @Mappings({
+            @Mapping(source = "firstName", target = "firstName"),
+            @Mapping(source = "lastName", target = "lastName"),
+            @Mapping(source = "email", target = "email"),
+            @Mapping(source = "password", target = "password")
+    })
+    User mapToUserEntity(UserRequest userRequest);
+    @Mappings({
+            @Mapping(source = "id", target = "id"),
+            @Mapping(source = "firstName", target = "firstName"),
+            @Mapping(source = "lastName", target = "lastName"),
+            @Mapping(source = "email", target = "email")
+    })
+    UserResponse mapToUserResponse(User user);
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\mapper\UserMapper.java ====================
+package com.example.revisionSpringBoot.mapper;
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\repository\UserRepository.java ====================
+package com.example.revisionSpringBoot.repository;
+import com.example.revisionSpringBoot.entity.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.transaction.annotation.Transactional;
+public interface UserRepository extends JpaRepository<User, Integer> {
+    User findByEmail(String email);
+    @Modifying
+    @Transactional
+    @Query("update User u set u.firstName = :firstName, u.lastName = :lastName where u.email = :email")
+    void updateUserByEmail(String email, String firstName, String lastName);
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\service\UserService.java ====================
+package com.example.revisionSpringBoot.service;
+import com.example.revisionSpringBoot.dto.UserRequest;
+import com.example.revisionSpringBoot.dto.UserResponse;
+import com.example.revisionSpringBoot.entity.User;
+import java.util.List;
+import java.util.Map;
+public interface UserService {
+    UserResponse createUser (UserRequest userRequest);
+    UserResponse getUserById(int userId);
+    List<UserResponse> getAllUsers();
+    UserResponse updateUserById(int userId, UserRequest userDto);
+    void deleteUserById(int userId);
+    Map<String, Object> updateUserByEmail(String email, String firstName, String lastName);
+}
+==================== D:\springBootProjects\practice-spring-boot-feb-2025\src\main\java\com\example\revisionSpringBoot\service\impl\UserServiceImpl.java ====================
+package com.example.revisionSpringBoot.service.impl;
+import com.example.revisionSpringBoot.client.AddressClient;
+import com.example.revisionSpringBoot.client.AddressClientImpl;
+import com.example.revisionSpringBoot.client.OrderClient;
+import com.example.revisionSpringBoot.dto.*;
+import com.example.revisionSpringBoot.entity.User;
+import com.example.revisionSpringBoot.exception.DownstreamServiceException;
+import com.example.revisionSpringBoot.exception.DownstreamServiceTimeoutException;
+import com.example.revisionSpringBoot.exception.ResourceNotFoundException;
+import com.example.revisionSpringBoot.exception.UserNotFoundException;
+import com.example.revisionSpringBoot.mapper.AutoUserMapper;
+import com.example.revisionSpringBoot.repository.UserRepository;
+import com.example.revisionSpringBoot.service.UserService;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.*;
+import java.util.stream.Collectors;
+@Service
+@AllArgsConstructor
+@Slf4j
+public class UserServiceImpl implements UserService {
+    private final OrderClient orderClient;
+    private final UserRepository userRepository;
+    private final AutoUserMapper autoUserMapper;
+    private final AddressClient addressClient;
+    @Override
+    public UserResponse createUser(UserRequest userRequest) {
+        User user = autoUserMapper.mapToUserEntity(userRequest);
+        User saveUser = userRepository.save(user);
+        UserResponse saveUserResponse = autoUserMapper.mapToUserResponse(saveUser);
+        return saveUserResponse;
+    }
+    @Override
+    public UserResponse getUserById(int userId) {
+        log.info("received user id: {}", userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found with id: " + userId
+                        ));
+        UserResponse userResponse =
+                autoUserMapper.mapToUserResponse(user);
+        List<PartialResponseWarning> warnings =
+                new ArrayList<>();
+        ServiceCallResult<List<AddressResponse>> addressResult =
+                addressClient.getAddressesByUserId((long) userId);
+        userResponse.setAddresses(
+                addressResult.getData() != null
+                        ? addressResult.getData()
+                        : Collections.emptyList()
+        );
+        if (!addressResult.isHasData()
+                && addressResult.getWarning() != null) {
+            warnings.add(addressResult.getWarning());
+        }
+        ServiceCallResult<List<OrderResponse>> orderResult =
+                orderClient.getOrdersByUserId((long) userId);
+        userResponse.setOrders(
+                orderResult.getData() != null
+                        ? orderResult.getData()
+                        : Collections.emptyList()
+        );
+        if (!orderResult.isHasData()
+                && orderResult.getWarning() != null) {
+            warnings.add(orderResult.getWarning());
+        }
+        userResponse.setWarnings(warnings);
+        return userResponse;
+    }
+    @Override
+    public List<UserResponse> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        return users.stream()
+                .map(autoUserMapper::mapToUserResponse)
+                .collect(Collectors.toList());
+    }
+    @Override
+    public UserResponse updateUserById(int userId, UserRequest user) {
+        User existingUser = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+        log.info("in user service implementation : user id --> {}, name --> {} {}, email --> {}", existingUser.getId(), existingUser.getFirstName(), existingUser.getLastName(), existingUser.getEmail());
+        existingUser.setFirstName(user.getFirstName());
+        existingUser.setLastName(user.getLastName());
+        existingUser.setEmail(user.getEmail());
+        User updateUser = userRepository.save(existingUser);
+        log.info("in user service implementation : user id --> {}, name --> {} {}, email --> {}", updateUser.getId(), updateUser.getFirstName(), updateUser.getLastName(), updateUser.getEmail());
+        return autoUserMapper.mapToUserResponse(updateUser);
+    }
+    public void deleteUserById(int userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found with id: " + userId)
+                );
+        userRepository.delete(user);
+    }
+    @Override
+    @Transactional
+    public Map<String, Object> updateUserByEmail(String email, String firstName, String lastName) {
+        User existingUser = userRepository.findByEmail(email);
+        if (existingUser == null) {
+            throw new ResourceNotFoundException("User", "email", email);
+        }
+        userRepository.updateUserByEmail(email, firstName, lastName);
+        Map<String, Object> response = new HashMap<>();
+        response.put("email", email);
+        response.put("id", existingUser.getId());
+        response.put("msg", "firstname - \"" + firstName + "\" and lastname - \"" + lastName + "\" updated");
+        return response;
+    }
+}
